@@ -1,5 +1,6 @@
 # app.py
 from flask import Flask, request, jsonify
+
 import torch
 import torch.nn.functional as F
 from torch_geometric.data import Data
@@ -10,7 +11,11 @@ import joblib
 from torch_geometric.nn import GCNConv, BatchNorm
 import torch.nn as nn
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)  # Allows all origins for development
+
 
 # ---------------------------
 # 1️⃣ Load your preprocessor & model
@@ -121,4 +126,5 @@ def predict_wallet_api():
 # 6️⃣ Run Flask app
 # ---------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)  # Runs Flask on port 8000
+

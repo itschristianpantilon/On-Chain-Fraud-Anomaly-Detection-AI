@@ -7,24 +7,51 @@ export default function WalletPredict() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
+  // Replace this with actual logic to fetch wallet transaction features
+  async function fetchWalletFeatures(address) {
+    try {
+      // Example: Call a blockchain explorer API or your own backend service
+      // that returns numeric/categorical features for the given wallet
+      // Here we mock the response for demonstration:
+      return {
+        numeric_feature1: 0.1,
+        numeric_feature2: 0.5,
+        numeric_feature3: 1.2,
+        categorical_feature1: "cat1",
+        categorical_feature2: "cat2",
+      };
+    } catch (e) {
+      console.error("Error fetching wallet features:", e);
+      throw new Error("Failed to fetch wallet features");
+    }
+  }
+
   async function handleCheck() {
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const featResp = await fetch(`/api/extract_features?wallet=${encodeURIComponent(address)}`);
-      if (!featResp.ok) throw new Error((await featResp.json()).error || featResp.statusText);
-      const featJson = await featResp.json();
+      // Step 1️⃣: Fetch features from the wallet
+      const features = await fetchWalletFeatures(address);
 
-      const predictResp = await fetch("/api/predict_risk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ features: featJson.features }),
-      });
-      if (!predictResp.ok) throw new Error((await predictResp.json()).error || predictResp.statusText);
-      const predictJson = await predictResp.json();
-      setResult(predictJson.results[0]);
+      // Step 2️⃣: Send features to Flask API
+const resp = await fetch("http://localhost:8000/predict_wallet", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ wallet: features }),
+});
+
+
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.error || resp.statusText);
+      }
+
+      const data = await resp.json();
+      setResult(data);
+
     } catch (e) {
       console.error(e);
       setError(e.message || String(e));
@@ -42,13 +69,13 @@ export default function WalletPredict() {
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="Enter Ethereum wallet address"
-          className="w-full p-4 mb-4 bg-[rgba(255,255,255,0.1)] border border-[#00fff7] rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00fff7]"
+          className="w-full p-4 mb-4 bg-[rgba(255,255,255,0.1)] border border-[#00fff7] rounded-md text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00fff7]"
         />
 
         <button
           onClick={handleCheck}
           disabled={!address || loading}
-          className={`w-full py-3 mb-4 font-bold rounded-xl transition-colors duration-300 
+          className={`w-full py-3 mb-4 font-bold rounded-sm transition-colors duration-300 
             ${loading ? "bg-gray-600 cursor-not-allowed" : "bg-[#00fff7] text-black hover:bg-[#00d6d6]"} shadow-neon`}
         >
           {loading ? "Checking…" : "Check Risk"}
